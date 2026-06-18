@@ -1,13 +1,4 @@
 #include <Arduino.h>
-// SPDX-FileCopyrightText: 2023 Carter Nelson for Adafruit Industries
-//
-// SPDX-License-Identifier: MIT
-// --------------------------------------
-// i2c_scanner
-//
-// Modified from https://playground.arduino.cc/Main/I2cScanner/
-// --------------------------------------
-
 #include <Wire.h>
 #include "pcf8574A.h"
 #include "ad7417.h"
