@@ -14,19 +14,23 @@ public:
         : _server(80), _febs(febs), _config(config), _wifiMgr(wifiMgr) {}
 
     void begin() {
-        _server.serveStatic("/style.css", LittleFS, "/style.css");
-        _server.serveStatic("/app.js", LittleFS, "/app.js");
+        _server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* req) {
+            serveFile(req, "/style.css", "text/css");
+        });
+        _server.on("/app.js", HTTP_GET, [](AsyncWebServerRequest* req) {
+            serveFile(req, "/app.js", "application/javascript");
+        });
 
         _server.on("/", HTTP_GET, [this](AsyncWebServerRequest* req) {
-            req->send(LittleFS, "/index.html", "text/html");
+            serveFile(req, "/index.html", "text/html");
         });
 
         _server.on("/feb", HTTP_GET, [this](AsyncWebServerRequest* req) {
-            req->send(LittleFS, "/feb.html", "text/html");
+            serveFile(req, "/feb.html", "text/html");
         });
 
         _server.on("/wifi", HTTP_GET, [this](AsyncWebServerRequest* req) {
-            req->send(LittleFS, "/wifimanager.html", "text/html", false,
+            serveFile(req, "/wifimanager.html", "text/html", false,
                 std::bind(&WebServer::wifiProcessor, this, std::placeholders::_1));
         });
 
@@ -48,6 +52,10 @@ public:
 
         _server.on("/api/dac/disable", HTTP_POST, [this](AsyncWebServerRequest* req) {
             handleApiDacEnable(req, false);
+        });
+
+        _server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* req) {
+            req->send(204);
         });
 
         _server.onNotFound([](AsyncWebServerRequest* req) {
@@ -122,7 +130,6 @@ private:
     String buildStatusJSON() {
         String json = "{\"febs\":[";
         for (int i = 0; i < 4; i++) {
-            _febs[i].update();
             const FEBStatus& s = _febs[i].getStatus();
             if (i > 0) json += ",";
             json += "{\"id\":" + String(i) + ",";
@@ -162,5 +169,34 @@ private:
         json += _wifiMgr.isConnected() ? "true" : "false";
         json += "}}";
         return json;
+    }
+
+    static void serveFile(AsyncWebServerRequest* req, const String& path, const String& contentType) {
+        File f = LittleFS.open(path, "r");
+        if (!f) { req->send(404, "text/plain", "File not found"); return; }
+        String content = f.readString();
+        f.close();
+        req->send(200, contentType, content);
+    }
+
+    static void serveFile(AsyncWebServerRequest* req, const String& path, const String& contentType,
+                          bool unused, AwsTemplateProcessor callback) {
+        (void)unused;
+        File f = LittleFS.open(path, "r");
+        if (!f) { req->send(404, "text/plain", "File not found"); return; }
+        String content = f.readString();
+        f.close();
+        String result;
+        int last = 0;
+        while (true) {
+            int s = content.indexOf('%', last);
+            if (s < 0) { result += content.substring(last); break; }
+            int e = content.indexOf('%', s + 1);
+            if (e < 0) { result += content.substring(last); break; }
+            result += content.substring(last, s);
+            result += callback(content.substring(s + 1, e));
+            last = e + 1;
+        }
+        req->send(200, contentType, result);
     }
 };
