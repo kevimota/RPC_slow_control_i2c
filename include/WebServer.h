@@ -20,6 +20,9 @@ public:
         _server.on("/app.js", HTTP_GET, [](AsyncWebServerRequest* req) {
             serveFile(req, "/app.js", "application/javascript");
         });
+        _server.on("/fonts/space-grotesk.woff2", HTTP_GET, [](AsyncWebServerRequest* req) {
+            serveFile(req, "/fonts/space-grotesk.woff2", "font/woff2");
+        });
 
         _server.on("/", HTTP_GET, [this](AsyncWebServerRequest* req) {
             serveFile(req, "/index.html", "text/html");

@@ -79,7 +79,7 @@ function createFebCard(feb) {
     }
     html += '</table>';
 
-    html += '<div class="section-title">DAC Power</div>';
+    html += '<div class="section-title">ENABLE DAC</div>';
     html += '<div class="btn-group">';
     for (let c = 0; c < 2; c++) {
         const en = feb.dac.enabled[c];
