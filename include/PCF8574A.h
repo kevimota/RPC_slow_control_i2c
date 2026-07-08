@@ -24,13 +24,12 @@ public:
         return Wire.endTransmission() == 0;
     }
 
-    static void selDac(char feb, int chip) {
-        int nFEB = feb - 'A';
-        if (nFEB < 0 || nFEB > 3 || chip < 0 || chip > 1) return;
+    static void selDac(int feb, int chip) {
+        if (feb < 0 || feb > 3 || chip < 0 || chip > 1) return;
         for (int i = 0; i < 4; i++) {
             uint8_t val = readRaw(PCF8574A_BASE_ADDR + 2 * i);
             for (int j = 0; j < 2; j++) {
-                if (i == nFEB && j == chip)
+                if (i == feb && j == chip)
                     val &= ~(1 << j);
                 else
                     val |= (1 << j);
@@ -39,24 +38,22 @@ public:
         }
     }
 
-    static void enDac(char feb, int chip) {
-        int nFEB = feb - 'A';
-        if (nFEB < 0 || nFEB > 3 || chip < 0 || chip > 1) return;
-        uint8_t val = readRaw(PCF8574A_BASE_ADDR + 2 * nFEB);
+    static void enDac(int feb, int chip) {
+        if (feb < 0 || feb > 3 || chip < 0 || chip > 1) return;
+        uint8_t val = readRaw(PCF8574A_BASE_ADDR + 2 * feb);
         val &= ~(1 << (2 + chip));
-        writeRaw(PCF8574A_BASE_ADDR + 2 * nFEB, val);
+        writeRaw(PCF8574A_BASE_ADDR + 2 * feb, val);
     }
 
-    static void disDac(char feb, int chip) {
-        int nFEB = feb - 'A';
-        if (nFEB < 0 || nFEB > 3 || chip < 0 || chip > 1) return;
-        uint8_t val = readRaw(PCF8574A_BASE_ADDR + 2 * nFEB);
+    static void disDac(int feb, int chip) {
+        if (feb < 0 || feb > 3 || chip < 0 || chip > 1) return;
+        uint8_t val = readRaw(PCF8574A_BASE_ADDR + 2 * feb);
         val |= (1 << (2 + chip));
-        writeRaw(PCF8574A_BASE_ADDR + 2 * nFEB, val);
+        writeRaw(PCF8574A_BASE_ADDR + 2 * feb, val);
     }
 
     static void enableAll() {
-        for (char feb = 'A'; feb <= 'D'; feb++)
+        for (int feb = 0; feb < 4; feb++)
             for (int chip = 0; chip < 2; chip++)
                 enDac(feb, chip);
     }

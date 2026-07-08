@@ -16,14 +16,13 @@ struct FEBStatus {
 
 class FEBManager {
 public:
-    FEBManager() : _id('A'), _initialized(false) {}
+    FEBManager() : _id(0), _initialized(false) {}
 
-    void begin(char id) {
+    void begin(int id) {
         _id = id;
-        int nFEB = id - 'A';
-        _pcf.begin(PCF8574A_BASE_ADDR + 2 * nFEB);
-        _adc[0].begin(AD7417_BASE_ADDR + 2 * nFEB + 0);
-        _adc[1].begin(AD7417_BASE_ADDR + 2 * nFEB + 1);
+        _pcf.begin(PCF8574A_BASE_ADDR + 2 * _id);
+        _adc[0].begin(AD7417_BASE_ADDR + 2 * _id + 0);
+        _adc[1].begin(AD7417_BASE_ADDR + 2 * _id + 1);
         for (int c = 0; c < 2; c++) {
             _dacEnabled[c] = true;
             for (int ch = 0; ch < 4; ch++)
@@ -32,7 +31,7 @@ public:
         _initialized = true;
     }
 
-    char id() const { return _id; }
+    int id() const { return _id; }
     bool isInitialized() const { return _initialized; }
 
     void update() {
@@ -103,7 +102,7 @@ public:
     }
 
 private:
-    char _id;
+    int _id;
     bool _initialized;
     PCF8574A _pcf;
     AD7417 _adc[2];

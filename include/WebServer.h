@@ -82,23 +82,18 @@ private:
     }
 
     void handleApiDac(AsyncWebServerRequest* req) {
-        String febStr = req->arg("feb");
-        if (febStr.length() != 1) {
-            req->send(400, "application/json", "{\"error\":\"Invalid FEB\"}");
-            return;
-        }
-        char feb = febStr[0];
+        int feb = req->arg("feb").toInt();
         int chip = req->arg("chip").toInt();
         int channel = req->arg("channel").toInt();
         float voltage = req->arg("voltage").toFloat();
 
-        if (feb < 'A' || feb > 'D' || chip < 0 || chip > 1 || channel < 1 || channel > 4) {
+        if (feb < 0 || feb > 3 || chip < 0 || chip > 1 || channel < 1 || channel > 4) {
             req->send(400, "application/json", "{\"error\":\"Invalid parameters\"}");
             return;
         }
 
-        _febs[feb - 'A'].setDAC(chip, channel, voltage);
-        String json = "{\"ok\":true,\"feb\":\"" + String(feb) + "\","
+        _febs[feb].setDAC(chip, channel, voltage);
+        String json = "{\"ok\":true,\"feb\":" + String(feb) + ","
             "\"chip\":" + String(chip) + ","
             "\"channel\":" + String(channel) + ","
             "\"target\":" + String(voltage) + "}";
@@ -106,23 +101,18 @@ private:
     }
 
     void handleApiDacEnable(AsyncWebServerRequest* req, bool enable) {
-        String febStr = req->arg("feb");
-        if (febStr.length() != 1) {
-            req->send(400, "application/json", "{\"error\":\"Invalid FEB\"}");
-            return;
-        }
-        char feb = febStr[0];
+        int feb = req->arg("feb").toInt();
         int chip = req->arg("chip").toInt();
 
-        if (feb < 'A' || feb > 'D' || chip < 0 || chip > 1) {
+        if (feb < 0 || feb > 3 || chip < 0 || chip > 1) {
             req->send(400, "application/json", "{\"error\":\"Invalid parameters\"}");
             return;
         }
 
-        if (enable) _febs[feb - 'A'].enableDAC(chip);
-        else _febs[feb - 'A'].disableDAC(chip);
+        if (enable) _febs[feb].enableDAC(chip);
+        else _febs[feb].disableDAC(chip);
 
-        String json = "{\"ok\":true,\"feb\":\"" + String(feb) + "\","
+        String json = "{\"ok\":true,\"feb\":" + String(feb) + ","
             "\"chip\":" + String(chip) + ",\"enabled\":";
         json += enable ? "true" : "false";
         json += "}";
@@ -135,8 +125,7 @@ private:
             _febs[i].update();
             const FEBStatus& s = _febs[i].getStatus();
             if (i > 0) json += ",";
-            char fid = 'A' + i;
-            json += "{\"id\":\"" + String(fid) + "\",";
+            json += "{\"id\":" + String(i) + ",";
             json += "\"pcf\":" + String(s.pcfValue) + ",";
             json += "\"temp\":[" + String(s.temp[0], 1) + "," + String(s.temp[1], 1) + "],";
             json += "\"adc\":[";

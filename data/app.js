@@ -46,9 +46,10 @@ function createFebCard(feb) {
     card.className = 'feb-card';
     card.id = 'feb-' + feb.id;
 
+    const febLabel = 'ABCD'[feb.id];
     const pcfStr = feb.pcf.toString(2).padStart(8, '0');
 
-    let html = '<h2>FEB ' + feb.id + ' <span class="pcf-badge">PCF: ' + pcfStr + '</span></h2>';
+    let html = '<h2>FEB ' + febLabel + ' <span class="pcf-badge">PCF: ' + pcfStr + '</span></h2>';
 
     html += '<div class="section-title">Temperature</div>';
     html += '<div class="temp-display">Chip 0: ' + feb.temp[0].toFixed(1) + ' &deg;C &nbsp;|&nbsp; Chip 1: ' + feb.temp[1].toFixed(1) + ' &deg;C</div>';
@@ -98,11 +99,12 @@ function createFebCard(feb) {
 
 function updateFebPage(data) {
     const params = new URLSearchParams(window.location.search);
-    const febId = params.get('id') || 'A';
+    const febId = parseInt(params.get('id')) || 0;
     const container = document.getElementById('feb-detail');
     if (!container) return;
 
-    const feb = data.febs.find(f => f.id === febId);
+    const febs = data.febs;
+    const feb = febs[febId];
     if (!feb) {
         container.innerHTML = '<p class="error-msg">FEB ' + febId + ' not found</p>';
         return;

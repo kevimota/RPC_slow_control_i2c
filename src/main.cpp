@@ -30,7 +30,7 @@ void setup() {
     config.begin();
 
     for (int i = 0; i < 4; i++)
-        febs[i].begin('A' + i);
+        febs[i].begin(i);
 
     PCF8574A::enableAll();
 
