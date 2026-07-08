@@ -210,6 +210,33 @@ button.warning {
     background: #1a4a8e;
 }
 
+.control-bar {
+    background: #16213e;
+    border: 1px solid #2a3a6e;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 6px 0;
+}
+
+.control-label {
+    color: #a8c8ff;
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 75px;
+}
+
+.voltage-input {
+    width: 100px;
+}
+
 .status-line {
     margin: 6px 0;
     font-size: 14px;

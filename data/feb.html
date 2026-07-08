@@ -15,10 +15,30 @@
         <a href="/feb?id=2">FEB C</a>
         <a href="/feb?id=3">FEB D</a>
         <button onclick="fetchStatus()">Refresh</button>
+        <button onclick="exportConfig()">Export Config</button>
         <span id="wifi-info" style="color:#666;margin-left:auto;font-size:13px"></span>
     </nav>
 
     <h1>FEB Detail</h1>
+
+    <div class="control-bar">
+        <div class="control-row">
+            <span class="control-label">Threshold:</span>
+            <input type="number" id="threshold-voltage" value="220" min="0" max="5000" step="10" class="voltage-input">
+            <button onclick="setCurrentFEB('threshold')">Apply to this FEB</button>
+        </div>
+        <div class="control-row">
+            <span class="control-label">VMon:</span>
+            <input type="number" id="vmon-voltage" value="3500" min="0" max="5000" step="10" class="voltage-input">
+            <button onclick="setCurrentFEB('vmon')">Apply to this FEB</button>
+        </div>
+        <div class="control-row">
+            <input type="file" id="import-file" accept=".json" style="display:none">
+            <button onclick="document.getElementById('import-file').click()">Import Config</button>
+            <span style="color:#666;font-size:13px;margin-left:8px">.json file</span>
+        </div>
+    </div>
+
     <div id="feb-detail"></div>
 
     <script src="/app.js"></script>
