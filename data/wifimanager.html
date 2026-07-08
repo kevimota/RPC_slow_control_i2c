@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPC FEB Control - WiFi</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <a href="/">Dashboard</a>
+        <a href="/wifi">WiFi</a>
+        <a href="/feb?id=A">FEB A</a>
+        <a href="/feb?id=B">FEB B</a>
+        <a href="/feb?id=C">FEB C</a>
+        <a href="/feb?id=D">FEB D</a>
+    </nav>
+
+    <h1>WiFi Configuration</h1>
+
+    <div class="status-line">Connected to: <span>%SSID%</span></div>
+    <div class="status-line">Device IP: <span>%IP%</span>%AP_MODE%</div>
+
+    <form class="wifi-form" action="/wifi" method="POST">
+        <label>SSID</label>
+        <input type="text" name="ssid" placeholder="WiFi network name" required>
+
+        <label>Password</label>
+        <input type="password" name="pass" placeholder="WiFi password">
+
+        <input type="submit" value="Save & Restart">
+    </form>
+</body>
+</html>
