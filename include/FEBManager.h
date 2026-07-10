@@ -73,11 +73,11 @@ public:
         AD5316::writeRaw(channel - 1, code);
         delay(10);
 
-        for (int iter = 0; iter < 5; iter++) {
+        for (int iter = 0; iter < 10; iter++) {
             float measured = _adc[chip].readADC(channel);
             if (measured < 0) break;
             float error = targetMV - measured;
-            if (fabs(error) < 5.0) break;
+            if (fabs(error) < 2.0) break;
             float correction = targetMV / measured;
             code = (uint16_t)(code * correction);
             if (code > AD5316_MAX_CODE) code = AD5316_MAX_CODE;
