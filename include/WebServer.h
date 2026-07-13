@@ -4,6 +4,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include "esp_task_wdt.h"
 #include "FEBManager.h"
 #include "DACTask.h"
 #include "Config.h"
@@ -248,6 +249,7 @@ private:
                     while (end < (int)data.length() && data[end] != ',' && data[end] != ']') end++;
                     float val = data.substring(pos, end).toFloat();
                     _febs[feb].setDAC(chip, ch + 1, val);
+                    esp_task_wdt_reset();
                     pos = end + 1;
                 }
             }
@@ -259,7 +261,9 @@ private:
             int e1 = data.substring(pos + 2, pos + 3).toInt();
             if (e0) _febs[feb].enableDAC(0); else _febs[feb].disableDAC(0);
             if (e1) _febs[feb].enableDAC(1); else _febs[feb].disableDAC(1);
+            _febs[feb].update();
         }
+        req->send(200, "application/json", "{\"ok\":true}");
         req->send(200, "application/json", "{\"ok\":true}");
     }
 
