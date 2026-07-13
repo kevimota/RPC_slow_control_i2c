@@ -5,6 +5,7 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "FEBManager.h"
+#include "DACTask.h"
 #include "Config.h"
 #include "WiFiManager.h"
 
@@ -45,24 +46,24 @@ public:
             req->send(200, "application/json", buildStatusJSON());
         });
 
-        _server.on("/api/dac", HTTP_POST, [this](AsyncWebServerRequest* req) {
-            handleApiDac(req);
-        });
-
-        _server.on("/api/dac/enable", HTTP_POST, [this](AsyncWebServerRequest* req) {
-            handleApiDacEnable(req, true);
-        });
-
-        _server.on("/api/dac/disable", HTTP_POST, [this](AsyncWebServerRequest* req) {
-            handleApiDacEnable(req, false);
+        _server.on("/api/dac/setfeb", HTTP_POST, [this](AsyncWebServerRequest* req) {
+            handleApiSetFeb(req);
         });
 
         _server.on("/api/dac/setall", HTTP_POST, [this](AsyncWebServerRequest* req) {
             handleApiSetAll(req);
         });
 
-        _server.on("/api/dac/setfeb", HTTP_POST, [this](AsyncWebServerRequest* req) {
-            handleApiSetFeb(req);
+        _server.on("/api/dac/disable", HTTP_POST, [this](AsyncWebServerRequest* req) {
+            handleApiDacEnable(req, false);
+        });
+
+        _server.on("/api/dac/enable", HTTP_POST, [this](AsyncWebServerRequest* req) {
+            handleApiDacEnable(req, true);
+        });
+
+        _server.on("/api/dac", HTTP_POST, [this](AsyncWebServerRequest* req) {
+            handleApiDac(req);
         });
 
         _server.on("/api/config/export", HTTP_GET, [this](AsyncWebServerRequest* req) {
@@ -75,6 +76,17 @@ public:
 
         _server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* req) {
             req->send(204);
+        });
+
+        _server.on("/api/debug/echo", HTTP_POST, [this](AsyncWebServerRequest* req) {
+            String json = "{";
+            for (int i = 0; i < req->params(); i++) {
+                if (i > 0) json += ",";
+                json += "\"" + req->getParam(i)->name() + "\":\"" + req->getParam(i)->value() + "\"";
+            }
+            json += "}";
+            Serial.printf("[DEBUG] /api/debug/echo params=%d body=%s\n", req->params(), json.c_str());
+            req->send(200, "application/json", json);
         });
 
         _server.onNotFound([](AsyncWebServerRequest* req) {
@@ -113,13 +125,22 @@ private:
         int chip = req->arg("chip").toInt();
         int channel = req->arg("channel").toInt();
         float voltage = req->arg("voltage").toFloat();
+        Serial.printf("[DEBUG] /api/dac  feb=%d chip=%d channel=%d voltage=%.1f params=%d\n",
+            feb, chip, channel, voltage, req->params());
 
         if (feb < 0 || feb > 3 || chip < 0 || chip > 1 || channel < 1 || channel > 4) {
             req->send(400, "application/json", "{\"error\":\"Invalid parameters\"}");
             return;
         }
 
-        _febs[feb].setDAC(chip, channel, voltage);
+        DACCommand cmd;
+        cmd.cmd = 0;
+        cmd.feb = feb;
+        cmd.chip = chip;
+        cmd.channel = channel;
+        cmd.voltage = voltage;
+        DACTask::post(cmd);
+
         String json = "{\"ok\":true,\"feb\":" + String(feb) + ","
             "\"chip\":" + String(chip) + ","
             "\"channel\":" + String(channel) + ","
@@ -130,14 +151,19 @@ private:
     void handleApiDacEnable(AsyncWebServerRequest* req, bool enable) {
         int feb = req->arg("feb").toInt();
         int chip = req->arg("chip").toInt();
+        Serial.printf("[DEBUG] /api/dac/%s  feb=%d chip=%d params=%d\n",
+            enable ? "enable" : "disable", feb, chip, req->params());
 
         if (feb < 0 || feb > 3 || chip < 0 || chip > 1) {
             req->send(400, "application/json", "{\"error\":\"Invalid parameters\"}");
             return;
         }
 
-        if (enable) _febs[feb].enableDAC(chip);
-        else _febs[feb].disableDAC(chip);
+        DACCommand cmd;
+        cmd.cmd = enable ? 1 : 2;
+        cmd.feb = feb;
+        cmd.chip = chip;
+        DACTask::post(cmd);
 
         String json = "{\"ok\":true,\"feb\":" + String(feb) + ","
             "\"chip\":" + String(chip) + ",\"enabled\":";
@@ -149,15 +175,18 @@ private:
     void handleApiSetAll(AsyncWebServerRequest* req) {
         float voltage = req->arg("voltage").toFloat();
         String type = req->arg("type");
-        int chStart, chEnd;
-        if (type == "threshold") { chStart = 0; chEnd = 1; }
-        else if (type == "vmon") { chStart = 2; chEnd = 3; }
-        else { req->send(400, "application/json", "{\"error\":\"type must be threshold or vmon\"}"); return; }
+        Serial.printf("[DEBUG] /api/dac/setall  voltage=%.1f type=\"%s\" params=%d\n",
+            voltage, type.c_str(), req->params());
+        if (type != "threshold" && type != "vmon") {
+            req->send(400, "application/json", "{\"error\":\"type must be threshold or vmon\"}");
+            return;
+        }
 
-        for (int feb = 0; feb < 4; feb++)
-            for (int chip = 0; chip < 2; chip++)
-                for (int ch = chStart; ch <= chEnd; ch++)
-                    _febs[feb].setDAC(chip, ch + 1, voltage);
+        DACCommand cmd;
+        cmd.cmd = 3;
+        cmd.voltage = voltage;
+        cmd.dacType = (type == "threshold") ? 0 : 1;
+        DACTask::post(cmd);
 
         req->send(200, "application/json", "{\"ok\":true}");
     }
@@ -167,14 +196,17 @@ private:
         float voltage = req->arg("voltage").toFloat();
         String type = req->arg("type");
         if (feb < 0 || feb > 3) { req->send(400, "application/json", "{\"error\":\"Invalid FEB\"}"); return; }
-        int chStart, chEnd;
-        if (type == "threshold") { chStart = 0; chEnd = 1; }
-        else if (type == "vmon") { chStart = 2; chEnd = 3; }
-        else { req->send(400, "application/json", "{\"error\":\"type must be threshold or vmon\"}"); return; }
+        if (type != "threshold" && type != "vmon") {
+            req->send(400, "application/json", "{\"error\":\"type must be threshold or vmon\"}");
+            return;
+        }
 
-        for (int chip = 0; chip < 2; chip++)
-            for (int ch = chStart; ch <= chEnd; ch++)
-                _febs[feb].setDAC(chip, ch + 1, voltage);
+        DACCommand cmd;
+        cmd.cmd = 4;
+        cmd.feb = feb;
+        cmd.voltage = voltage;
+        cmd.dacType = (type == "threshold") ? 0 : 1;
+        DACTask::post(cmd);
 
         req->send(200, "application/json", "{\"ok\":true}");
     }

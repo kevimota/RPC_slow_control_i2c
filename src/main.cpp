@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "WiFiManager.h"
 #include "WebServer.h"
+#include "DACTask.h"
 
 #ifndef I2C_SDA
 #define I2C_SDA 10
@@ -36,6 +37,7 @@ void setup() {
 
     wifiMgr.begin();
     server.begin();
+    DACTask::begin(febs);
 
     Serial.print("Ready at http://");
     Serial.println(wifiMgr.getLocalIP());

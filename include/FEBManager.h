@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include "esp_task_wdt.h"
 #include "PCF8574A.h"
 #include "AD7417.h"
 #include "AD5316.h"
@@ -67,13 +68,14 @@ public:
 
         PCF8574A::selDac(_id, chip);
         PCF8574A::enDac(_id, chip);
-        delay(5);
+        delay(1);
 
         uint16_t code = AD5316::voltageToCode(targetMV);
         AD5316::writeRaw(channel - 1, code);
-        delay(10);
+        delay(2);
 
-        for (int iter = 0; iter < 10; iter++) {
+        for (int iter = 0; iter < 5; iter++) {
+            esp_task_wdt_reset();
             float measured = _adc[chip].readADC(channel);
             if (measured < 0) break;
             float error = targetMV - measured;
@@ -82,7 +84,7 @@ public:
             code = (uint16_t)(code * correction);
             if (code > AD5316_MAX_CODE) code = AD5316_MAX_CODE;
             AD5316::writeRaw(channel - 1, code);
-            delay(10);
+            delay(2);
         }
 
         _dacTarget[chip][channel - 1] = targetMV;

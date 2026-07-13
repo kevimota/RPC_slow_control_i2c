@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const page = document.body.dataset.page;
     if (page === 'dashboard' || page === 'feb') {
         fetchStatus();
-        statusInterval = setInterval(fetchStatus, 2000);
+        statusInterval = setInterval(fetchStatus, 5000);
     }
 });
 
@@ -22,7 +22,7 @@ document.addEventListener('focusin', function(e) {
 
 document.addEventListener('focusout', function(e) {
     if (e.target.tagName === 'INPUT' && !statusInterval) {
-        statusInterval = setInterval(fetchStatus, 2000);
+        statusInterval = setInterval(fetchStatus, 5000);
     }
 });
 
