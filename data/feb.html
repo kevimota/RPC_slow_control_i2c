@@ -34,9 +34,13 @@
             <button onclick="setCurrentFEB('vmon')">Apply to this FEB</button>
         </div>
         <div class="control-row">
-            <input type="file" id="import-file" accept=".json" style="display:none">
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importConfig()">
             <button onclick="document.getElementById('import-file').click()">Import Config</button>
             <span style="color:#666;font-size:13px;margin-left:8px">.json file</span>
+            <span style="margin-left:16px">
+                <button onclick="enableAllDACs()" style="background:#27ae60">Enable All</button>
+                <button onclick="disableAllDACs()" style="background:#e74c3c">Disable All</button>
+            </span>
         </div>
     </div>
 

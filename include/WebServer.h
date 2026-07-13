@@ -62,6 +62,16 @@ public:
             handleApiDacEnable(req, true);
         });
 
+        _server.on("/api/dac/enableall", HTTP_POST, [](AsyncWebServerRequest* req) {
+            DACCommand cmd; cmd.cmd = 5; DACTask::post(cmd);
+            req->send(200, "application/json", "{\"ok\":true}");
+        });
+
+        _server.on("/api/dac/disableall", HTTP_POST, [](AsyncWebServerRequest* req) {
+            DACCommand cmd; cmd.cmd = 6; DACTask::post(cmd);
+            req->send(200, "application/json", "{\"ok\":true}");
+        });
+
         _server.on("/api/dac", HTTP_POST, [this](AsyncWebServerRequest* req) {
             handleApiDac(req);
         });

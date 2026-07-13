@@ -7,7 +7,7 @@
 #include "FEBManager.h"
 
 struct DACCommand {
-    uint8_t cmd;      // 0=set, 1=enable, 2=disable, 3=setall, 4=setfeb
+    uint8_t cmd;      // 0=set, 1=enable, 2=disable, 3=setall, 4=setfeb, 5=enableall, 6=disableall
     int8_t feb;
     int8_t chip;
     int8_t channel;
@@ -69,6 +69,20 @@ private:
                         _febs[cmd.feb].update();
                         break;
                     }
+                    case 5:
+                        for (int f = 0; f < 4; f++)
+                            for (int c = 0; c < 2; c++) {
+                                _febs[f].enableDAC(c);
+                                _febs[f].update();
+                            }
+                        break;
+                    case 6:
+                        for (int f = 0; f < 4; f++)
+                            for (int c = 0; c < 2; c++) {
+                                _febs[f].disableDAC(c);
+                                _febs[f].update();
+                            }
+                        break;
                 }
             }
         }

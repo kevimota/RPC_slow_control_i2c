@@ -213,6 +213,20 @@ function disableDAC(feb, chip) {
     .catch(err => console.error(err));
 }
 
+function enableAllDACs() {
+    fetch('/api/dac/enableall', {method:'POST'})
+    .then(r => r.json())
+    .then(() => fetchStatus())
+    .catch(err => console.error(err));
+}
+
+function disableAllDACs() {
+    fetch('/api/dac/disableall', {method:'POST'})
+    .then(r => r.json())
+    .then(() => fetchStatus())
+    .catch(err => console.error(err));
+}
+
 function setAllFEBs(type) {
     const input = document.getElementById(type + '-voltage');
     if (!input) return;
